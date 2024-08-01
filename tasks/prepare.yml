@@ -2,13 +2,20 @@
   community.general.timezone:
     name: "{{ samba_timezone }}"
 
-- name: Set fact for samba server
+- name: Set fact for first samba domain controller
   ansible.builtin.set_fact:
-    first_samba_fact: "{{ groups['samba'][0] }}"
+    first_samba_dc_name_fact: "{{ groups[samba_dc_inventory_group][0] }}"
+
+- name: Gather ip address of {{ first_samba_dc_name_fact }}
+  ansible.builtin.setup:
+    filter:
+      - all_ipv4_addresses
+  register: first_samba_dc_facts
+  delegate_to: "{{ first_samba_dc_name_fact }}"
 
 - name: Set fact for samba domain controller ip address
   ansible.builtin.set_fact:
-    samba_dc_ip_fact: "{{ hostvars[first_samba_fact]['ansible_all_ipv4_addresses'][0] }}"
+    samba_dc_ip_fact: "{{ first_samba_dc_facts['ansible_facts']['ansible_all_ipv4_addresses'][0] }}"
 
 - name: Output hostinfo
   ansible.builtin.debug:

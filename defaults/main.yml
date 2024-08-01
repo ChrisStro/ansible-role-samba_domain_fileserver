@@ -1,5 +1,7 @@
 samba_timezone: Europe/Berlin
 
+samba_dc_inventory_group: samba_domain_controller
+
 # this is only for quick labs
 samba_netbios_domainname: SAMBA
 samba_domainname: SAMBA.LOCAL
