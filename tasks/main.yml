@@ -1,0 +1,24 @@
+- name: Prepare machine for samba
+  ansible.builtin.import_tasks: prepare.yml
+
+- name: Install debian based machine for samba
+  ansible.builtin.import_tasks: install_debianbase.yml
+  when: ansible_facts['os_family']|lower == 'debian'
+
+- name: Update systemd-resolved configuration
+  ansible.builtin.import_tasks: resolved.yml
+
+- name: Join active directory domain
+  ansible.builtin.import_tasks: join_domain.yml
+
+- name: Enforce handlers
+  ansible.builtin.meta: flush_handlers
+
+# handlers have to run first
+- name: Create Share folder
+  ansible.builtin.file:
+    path: /FILESERVER/Share
+    state: directory
+    owner: root
+    group: "Domain Admins"
+    mode: '0770'

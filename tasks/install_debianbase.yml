@@ -1,0 +1,5 @@
+- name: Install needed packages for samba-fileserver
+  ansible.builtin.apt:
+    name: "{{ debian_packages }}"
+    state: present
+    update_cache: true

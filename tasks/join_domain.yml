@@ -1,0 +1,65 @@
+- name: Backup krb5.conf
+  ansible.builtin.command: mv /etc/krb5.conf /etc/krb5.conf.bak
+  args:
+    creates: /etc/krb5.conf.bak
+
+- name: Backup smb.conf
+  ansible.builtin.command: mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
+  args:
+    creates: /etc/samba/smb.conf.bak
+
+- name: Checking if already domain joined via tagfile
+  ansible.builtin.stat:
+    path: /var/log/.domain_joined
+  register: domain_joined_check
+
+- name: Join server to domain
+  when: not domain_joined_check.stat.exists
+  block:
+    - name: Copy templated krb5.conf
+      ansible.builtin.template:
+        src: templates/krb5.j2
+        dest: /etc/krb5.conf
+        mode: '644'
+
+    - name: Copy templated smb.conf
+      ansible.builtin.template:
+        src: templates/smb.j2
+        dest: /etc/samba/smb.conf
+        mode: '644'
+
+    - name: Restart smbd
+      ansible.builtin.service:
+        name: smbd
+        state: restarted
+      become: true
+
+    - name: Join active directory
+      ansible.builtin.command: /bin/bash -c "echo -e \"{{ samba_adminpwd }}\" | net ads join -U Administrator createcomputer=Computers"
+      no_log: true
+      register: join_output
+      # ignore_errors: true
+      changed_when: join_output.rc == 0
+      notify:
+        - Restart winbind
+        - Restart nmbd
+
+    - name: Create tagfile to prevent overprovisioning
+      ansible.builtin.file:
+        dest: /var/log/.domain_joined
+        state: touch
+        mode: '644'
+
+- name: Update winbind config
+  ansible.builtin.lineinfile:
+    path: /etc/default/winbind
+    regexp: "#WINBINDD_OPTS"
+    state: present
+    line: 'WINBINDD_OPTS="-n"'
+    backup: true
+
+- name: Update nsswitch config
+  ansible.builtin.replace:
+    path: /etc/nsswitch.conf
+    regexp: 'files systemd'
+    replace: 'files systemd winbind'

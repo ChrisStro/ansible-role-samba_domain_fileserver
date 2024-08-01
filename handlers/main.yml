@@ -1,0 +1,11 @@
+- name: Restart winbind
+  ansible.builtin.service:
+    name: winbind
+    state: restarted
+  become: true
+
+- name: Restart nmbd
+  ansible.builtin.service:
+    name: nmbd
+    state: restarted
+  become: true

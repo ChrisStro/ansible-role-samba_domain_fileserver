@@ -1,0 +1,51 @@
+[global]
+	workgroup = {{ samba_netbios_domainname|upper }}
+	security = ADS
+	realm = {{ samba_domainname|upper }}
+	server string = %h server
+
+	vfs objects = acl_xattr shadow_copy2
+    map acl inherit = Yes
+    store dos attributes = Yes
+	idmap config *:backend = tdb
+	idmap config *:range = 3000000-4000000
+	idmap config *:schema_mode = rfc2307
+
+	winbind refresh tickets = Yes
+	winbind use default domain = Yes
+	winbind separator = /
+	winbind nested groups = yes
+	winbind nss info = rfc2307
+
+	pam password change = Yes
+	passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+	passwd program = /usr/bin/passwd %u
+
+	template homedir = /home/%U
+	template shell = /bin/bash
+	bind interfaces only = Yes
+	interfaces = lo eth0
+	log file = /var/log/samba/log.%m
+	logging = syslog
+	max log size = 1000
+	panic action = /usr/share/samba/panic-action %d
+
+	load printers = No
+	printcap name = /dev/null
+	printing = bsd
+	disable spoolss = Yes
+
+	dns proxy = No
+	#shadow: snapdir = .zfs/snapshot
+	#shadow: sort = desc
+	#shadow: format = -%Y-%m-%d-%H%M
+	#shadow: snapprefix = ^zfs-auto-snap_\(frequent\)\{0,1\}\(hourly\)\{0,1\}\(daily\)\{0,1\}\(weekly\)\{0,1\}\(monthly\)\{0,1\}\(backup\)\{0,1\}\(manual\)\{0,1\}
+	#shadow: delimiter = -20
+
+[Share]
+	comment = Main Share
+	path = /FILESERVER/Share
+	read only = No
+	create mask = 0660
+	directory mask = 0770
+	inherit acls = Yes

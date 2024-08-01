@@ -1,0 +1,25 @@
+- name: Check if systemd-resolved is running
+  ansible.builtin.systemd:
+    name: systemd-resolved
+  register: resolved_status
+
+- name: Create new resolv.conf
+  when: resolved_status.status.ActiveState == "active"
+  block:
+    - name: Disable systemd-resolved
+      ansible.builtin.systemd:
+        name: systemd-resolved
+        state: stopped
+        enabled: false
+        masked: true
+
+    - name: Remove resolved symlink
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+
+    - name: Copy resolv.conf template
+      ansible.builtin.template:
+        src: templates/resolv.conf.j2
+        dest: /etc/resolv.conf
+        mode: '644'

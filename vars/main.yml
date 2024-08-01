@@ -1,0 +1,16 @@
+# debian
+debian_packages:
+  - samba               # samba service
+  # - samba-dsdb-modules  # samba service
+  # - samba-vfs-modules
+  - winbind             # emulation of a Windows client for ID and auth
+  - krb5-config         # needed by Kerberos V5 library
+  - krb5-user           # needed for Kerberos auth
+  - smbclient           # access smbclient
+  - dnsutils            # some dns utils
+  - net-tools           # some network utils
+  - wsdd                # windows discovery service
+  - ntp                 # time sync
+  - acl                 #
+  - libpam-winbind      #
+  - libnss-winbind      #

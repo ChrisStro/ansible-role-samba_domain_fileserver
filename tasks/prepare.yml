@@ -1,0 +1,38 @@
+- name: Set timezone to {{ samba_timezone }}
+  community.general.timezone:
+    name: "{{ samba_timezone }}"
+
+- name: Set fact for samba server
+  ansible.builtin.set_fact:
+    first_samba_fact: "{{ groups['samba'][0] }}"
+
+- name: Set fact for samba domain controller ip address
+  ansible.builtin.set_fact:
+    samba_dc_ip_fact: "{{ hostvars[first_samba_fact]['ansible_all_ipv4_addresses'][0] }}"
+
+- name: Output hostinfo
+  ansible.builtin.debug:
+    msg: |
+      Hostname: {{ ansible_hostname }}
+      DC-IPv4: {{ samba_dc_ip_fact }}
+      Domain: {{ samba_domainname }}
+
+- name: Set hostname to ansible_hostname
+  ansible.builtin.hostname:
+    name: "{{ ansible_hostname }}"
+
+- name: Edit hostname in hosts file
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "127.0.1.1\t{{ ansible_hostname }}"
+    state: present
+    line: "{{ ansible_facts.all_ipv4_addresses[0] }}\t{{ ansible_hostname }}.{{ samba_domainname }} {{ ansible_hostname }}"
+    backup: true
+
+- name: Copy ntp.conf
+  ansible.builtin.copy:
+    src: ntp.conf
+    dest: /etc/ntp.conf
+    backup: true
+    force: true
+    mode: '644'
